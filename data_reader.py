@@ -10,7 +10,7 @@ from sklearn.utils import shuffle
 
 class Data(object):
     def __init__(self, batch_size):
-        self.samples = self.read_csv(['data/driving_log.csv', 'my-data-2/driving_log.csv',
+        self.samples = self.read_csv(['data/driving_log.csv', 'my-data/driving_log.csv','my-data-2/driving_log.csv',
                                       'my-data-3/driving_log.csv', 'my-data-4/driving_log.csv'])
         self.train, self.val = self.split_dataset(self.samples)
         self.train_generator = self.generator(self.train, is_training=True, batch_size=batch_size)
@@ -25,12 +25,12 @@ class Data(object):
                     samples.append(line)
         return samples
 
-    def split_dataset(self, samples, test_size=0.2):
+    def split_dataset(self, samples, test_size=0.1):
         samples = shuffle(samples)
         train_samples, validation_samples = train_test_split(samples, test_size=test_size)
         return train_samples, validation_samples
 
-    def random_distort(self, img):
+    def data_augmentation(self, img):
         """
         method for adding random distortion to dataset images, including random brightness adjust, and a random
         vertical shift of the horizon position
@@ -51,20 +51,8 @@ class Data(object):
             new_img[:, 0:mid, 0] *= factor
         else:
             new_img[:, mid:w, 0] *= factor
-        # randomly shift horizon
-        h, w, _ = new_img.shape
-        horizon = 2 * h / 5
-        v_shift = np.random.randint(-h / 10, h / 10)
-        pts1 = np.float32([[0, horizon], [w, horizon], [0, h], [w, h]])
-        pts2 = np.float32([[0, horizon + v_shift], [w, horizon + v_shift], [0, h], [w, h]])
-        M = cv2.getPerspectiveTransform(pts1, pts2)
-        new_img = cv2.warpPerspective(new_img, M, (w, h), borderMode=cv2.BORDER_REPLICATE)
         return (new_img.astype(np.uint8))
 
-    def data_augmentation(self, img, label):
-        img_flipped = np.fliplr(img)
-        label = -label
-        return img_flipped, label
 
     def preprocessing(self, img):
         # # change the color space to YUV
@@ -79,9 +67,7 @@ class Data(object):
         num_samples = len(samples)
         while 1:  # Loop forever so the generator never terminates
             shuffle(samples)
-            # because we flip the image, we only need 1/2 of original batch size
-            # if is_training:
-            #     batch_size = batch_size/2
+
             for offset in range(0, num_samples, batch_size):
                 batch_samples = samples[offset:offset + batch_size]
 
@@ -98,7 +84,7 @@ class Data(object):
                     if is_training:
                         prob = np.random.rand()
                         if prob < 0.5:
-                            center_image = self.random_distort(center_image)
+                            center_image = self.data_augmentation(center_image)
                     images.append(center_image)
                     angles.append(center_angle)
 

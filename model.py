@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 def main():
     # the batch shape is [batch_size, 160, 320, 3]
     row, col, ch = 66, 200, 3  # Trimmed image format
-    epoch = 20
+    epoch = 25
     batch_size = 128
     data = Data(batch_size=batch_size)
 
@@ -33,7 +33,7 @@ def main():
                      activation='relu'))
 
     model.add(Flatten())
-    model.add(Dense(200, activation='relu'))
+    model.add(Dense(1164, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(50, activation='relu'))
     model.add(Dropout(0.5))
